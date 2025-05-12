@@ -70,7 +70,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 if (selectedDayTodos.isEmpty) {
                   return Center(
                     child: Text(
-                      'No tasks for ${_selectedDay!.day}/${_selectedDay!.month}/${_selectedDay!.year}',
+                      'No tasks for ${_selectedDay!.month}/${_selectedDay!.day}/${_selectedDay!.year}',
                       style: const TextStyle(fontSize: 18),
                     ),
                   );

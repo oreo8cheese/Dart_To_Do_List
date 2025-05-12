@@ -80,7 +80,7 @@ class TodoItem extends StatelessWidget {
               if (todo.description.isNotEmpty)
                 Text(todo.description),
               Text(
-                '${todo.dueDate.day}/${todo.dueDate.month}/${todo.dueDate.year}',
+                '${todo.dueDate.month}/${todo.dueDate.day}/${todo.dueDate.year}',
                 style: const TextStyle(color: Colors.grey),
               ),
             ],
