@@ -2,15 +2,69 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/todo_provider.dart';
 import '../models/todo.dart';
+import '../widgets/todo_item.dart';
 
-class TodayScreen extends StatelessWidget {
+class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
+
+  @override
+  State<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends State<TodayScreen> {
+  final Set<String> _selectedTodos = {};
+  bool _isSelectionMode = false;
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedTodos.clear();
+      }
+    });
+  }
+
+  void _toggleTodoSelection(String todoId) {
+    setState(() {
+      if (_selectedTodos.contains(todoId)) {
+        _selectedTodos.remove(todoId);
+        if (_selectedTodos.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedTodos.add(todoId);
+      }
+    });
+  }
+
+  void _deleteSelectedTodos() {
+    final todoProvider = Provider.of<TodoProvider>(context, listen: false);
+    for (final todoId in _selectedTodos) {
+      todoProvider.deleteTodo(todoId);
+    }
+    setState(() {
+      _selectedTodos.clear();
+      _isSelectionMode = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Today\'s Tasks'),
+        title: Text(_isSelectionMode ? '${_selectedTodos.length} selected' : 'Today\'s Tasks'),
+        actions: [
+          if (_isSelectionMode)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _selectedTodos.isEmpty ? null : _deleteSelectedTodos,
+            ),
+          if (_isSelectionMode)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _toggleSelectionMode,
+            ),
+        ],
       ),
       body: Consumer<TodoProvider>(
         builder: (context, todoProvider, child) {
@@ -29,59 +83,20 @@ class TodayScreen extends StatelessWidget {
             itemCount: todayTodos.length,
             itemBuilder: (context, index) {
               final todo = todayTodos[index];
-              return TodoItem(todo: todo);
+              return TodoItem(
+                todo: todo,
+                isSelectionMode: _isSelectionMode,
+                isSelected: _selectedTodos.contains(todo.id),
+                onSelect: () {
+                  if (!_isSelectionMode) {
+                    _toggleSelectionMode();
+                  }
+                  _toggleTodoSelection(todo.id);
+                },
+              );
             },
           );
         },
-      ),
-    );
-  }
-}
-
-class TodoItem extends StatelessWidget {
-  final Todo todo;
-
-  const TodoItem({super.key, required this.todo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dismissible(
-      key: Key(todo.id),
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        Provider.of<TodoProvider>(context, listen: false)
-            .deleteTodo(todo.id);
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          leading: Checkbox(
-            value: todo.isCompleted,
-            onChanged: (bool? value) {
-              Provider.of<TodoProvider>(context, listen: false)
-                  .toggleTodoStatus(todo.id);
-            },
-          ),
-          title: Text(
-            todo.title,
-            style: TextStyle(
-              decoration: todo.isCompleted ? TextDecoration.lineThrough : null,
-            ),
-          ),
-          subtitle: todo.description.isNotEmpty
-              ? Text(todo.description)
-              : null,
-          trailing: Text(
-            '${todo.dueDate.hour}:${todo.dueDate.minute.toString().padLeft(2, '0')}',
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ),
       ),
     );
   }
