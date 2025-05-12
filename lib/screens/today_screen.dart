@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/todo_provider.dart';
 import '../models/todo.dart';
 import '../widgets/todo_item.dart';
@@ -14,6 +15,7 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   final Set<String> _selectedTodos = {};
   bool _isSelectionMode = false;
+  bool _showUpcoming = false;
 
   void _toggleSelectionMode() {
     setState(() {
@@ -52,7 +54,7 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSelectionMode ? '${_selectedTodos.length} selected' : 'Today\'s Tasks'),
+        title: Text(_isSelectionMode ? '${_selectedTodos.length} selected' : 'Today'),
         actions: [
           if (_isSelectionMode)
             IconButton(
@@ -68,22 +70,42 @@ class _TodayScreenState extends State<TodayScreen> {
       ),
       body: Consumer<TodoProvider>(
         builder: (context, todoProvider, child) {
-          final todayTodos = todoProvider.getTodayTodos();
+          final todos = todoProvider.todos;
           
-          if (todayTodos.isEmpty) {
+          if (todos.isEmpty) {
             return const Center(
               child: Text(
-                'No tasks for today',
+                'No tasks yet',
                 style: TextStyle(fontSize: 18),
               ),
             );
           }
 
-          return ListView.builder(
-            itemCount: todayTodos.length,
-            itemBuilder: (context, index) {
-              final todo = todayTodos[index];
-              return TodoItem(
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final tomorrow = today.add(const Duration(days: 1));
+
+          final todayTodos = todos.where((todo) {
+            final todoDate = DateTime(
+              todo.dueDate.year,
+              todo.dueDate.month,
+              todo.dueDate.day,
+            );
+            return todoDate.isAtSameMomentAs(today);
+          }).toList();
+
+          final upcomingTodos = todos.where((todo) {
+            final todoDate = DateTime(
+              todo.dueDate.year,
+              todo.dueDate.month,
+              todo.dueDate.day,
+            );
+            return todoDate.isAfter(today);
+          }).toList();
+
+          return ListView(
+            children: [
+              ...todayTodos.map((todo) => TodoItem(
                 todo: todo,
                 isSelectionMode: _isSelectionMode,
                 isSelected: _selectedTodos.contains(todo.id),
@@ -93,8 +115,48 @@ class _TodayScreenState extends State<TodayScreen> {
                   }
                   _toggleTodoSelection(todo.id);
                 },
-              );
-            },
+              )),
+              if (upcomingTodos.isNotEmpty) ...[
+                const Divider(height: 32),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _showUpcoming = !_showUpcoming;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Upcoming (${upcomingTodos.length})',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          _showUpcoming ? Icons.expand_less : Icons.expand_more,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_showUpcoming)
+                  ...upcomingTodos.map((todo) => TodoItem(
+                    todo: todo,
+                    isSelectionMode: _isSelectionMode,
+                    isSelected: _selectedTodos.contains(todo.id),
+                    onSelect: () {
+                      if (!_isSelectionMode) {
+                        _toggleSelectionMode();
+                      }
+                      _toggleTodoSelection(todo.id);
+                    },
+                  )),
+              ],
+            ],
           );
         },
       ),

@@ -41,7 +41,7 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime(2025),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -126,43 +126,87 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
+            if (_isEditMode)
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Title',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.todo.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-              readOnly: !_isEditMode,
-            ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
+            if (_isEditMode)
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 5,
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.todo.description.isEmpty ? 'No description' : widget.todo.description,
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-              maxLines: 5,
-              readOnly: !_isEditMode,
-            ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isEditMode ? () => _selectDate(context) : null,
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(
-                      DateFormat('MMM d, yyyy').format(_selectedDate),
+                  child: Builder(
+                    builder: (context) => OutlinedButton.icon(
+                      onPressed: _isEditMode ? () => _selectDate(context) : null,
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(
+                        DateFormat('MMM d, yyyy').format(_selectedDate),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isEditMode ? () => _selectTime(context) : null,
-                    icon: const Icon(Icons.access_time),
-                    label: Text(_selectedTime.format(context)),
+                  child: Builder(
+                    builder: (context) => OutlinedButton.icon(
+                      onPressed: _isEditMode ? () => _selectTime(context) : null,
+                      icon: const Icon(Icons.access_time),
+                      label: Text(_selectedTime.format(context)),
+                    ),
                   ),
                 ),
               ],

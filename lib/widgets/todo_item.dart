@@ -27,11 +27,12 @@ class TodoItem extends StatelessWidget {
         onLongPress: onSelect,
         onTap: isSelectionMode
             ? onSelect
-            : () {
-                Navigator.push(
+            : () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TodoDetailScreen(todo: todo),
+                    fullscreenDialog: true,
                   ),
                 );
               },
