@@ -29,7 +29,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime(2025),
+      lastDate: DateTime(2027),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -114,7 +114,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
                       onPressed: () => _selectDate(context),
                       icon: const Icon(Icons.calendar_today),
                       label: Text(
-                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                        '${_selectedDate.month}/${_selectedDate.day}/${_selectedDate.year}',
                       ),
                     ),
                   ),
